@@ -38,23 +38,6 @@ export class ArcanaConnector extends AbstractConnector {
     this.emitUpdate({ chainId });
   };
 
-  // private accountsChangedListener = (accounts: string[]): void => {
-  //   this.emitUpdate({ account: accounts[0] });
-  // };
-
-  public async connectEagerly(): Promise<void> {
-    this.addListeners();
-    await this.auth.init();
-    if (await this.auth.isLoggedIn()) {
-      if (!this.auth.connected) {
-        await new Promise((resolve) =>
-          this.auth.provider.on("connect", resolve)
-        );
-      }
-    }
-    return;
-  }
-
   private addListeners() {
     if (!this.attached) {
       this.attached = true;
@@ -63,6 +46,7 @@ export class ArcanaConnector extends AbstractConnector {
       this.auth.provider.on("chainChanged", this.chainChangedListener);
     }
   }
+
   private removeListeners() {
     if (this.attached) {
       // this.auth.provider.removeListener("connect", this.connectListener);
@@ -77,38 +61,39 @@ export class ArcanaConnector extends AbstractConnector {
 
   async activate(): Promise<ConnectorUpdate> {
     this.addListeners();
-    let provider: EthereumProvider | undefined;
     await this.auth.init();
+
     if (await this.auth.isLoggedIn()) {
       if (!this.auth.connected) {
         await new Promise((resolve) =>
           this.auth.provider.on("connect", resolve)
         );
       }
-      // return;
     } else {
       if (this.login) {
-        if (this.login.provider === "passwordless") {
-          if (this.login.email) {
-            provider = await this.auth.loginWithLink(this.login.email);
-          } else {
-            throw new Error("email is required for passwordless login");
-          }
-        } else {
-          provider = await this.auth.loginWithSocial(this.login.provider);
-        }
+        await this.handleNoUILogin(this.login);
       } else {
-        provider = await this.auth.connect();
+        await this.auth.connect();
       }
     }
-    // const provider =
-    // .then((provider: EthereumProvider) => {
-    const accounts = (await provider?.request({
-      method: "eth_accounts",
-    })) as string[];
-    return { provider: this.auth.provider, account: accounts[0] };
-    // });
+
+    const account = await this.getAccount();
+
+    return { provider: this.auth.provider, account };
   }
+
+  private async handleNoUILogin(login: LoginType) {
+    if (login.provider === "passwordless") {
+      if (login.email) {
+        await this.auth.loginWithLink(login.email);
+      } else {
+        throw new Error("email is required for passwordless login");
+      }
+    } else {
+      await this.auth.loginWithSocial(login.provider);
+    }
+  }
+
   public async getProvider(): Promise<any> {
     return this.auth.provider;
   }

@@ -1,6 +1,6 @@
 {
   "name": "@arcana/auth-web3-react-v6",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "web3-react v6 connector for Arcana Auth",
   "author": "makylfang",
   "license": "MIT",
