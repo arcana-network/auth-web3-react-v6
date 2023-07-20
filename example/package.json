@@ -5,7 +5,8 @@
     "build": "next build && next export"
   },
   "dependencies": {
-    "@arcana/auth-web3-react-v6": "^0.0.2",
+    "@arcana/auth": "^1.0.6",
+    "@arcana/auth-web3-react-v6": "^0.0.3",
     "@ethersproject/providers": "^5.1.2",
     "@ethersproject/units": "^5.1.0",
     "@web3-react/abstract-connector": "latest",
