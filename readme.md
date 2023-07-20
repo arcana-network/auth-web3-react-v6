@@ -21,7 +21,9 @@ import { initializeConnector } from "@web3-react/core"
 const auth = new AuthProvider(`${arcana_client_id}`) // Singleton
 
 
-export const connector = new ArcanaConnector(auth)
+export const connector = new ArcanaConnector(auth, {
+  chainId: 1
+})
 ```
 
 With custom UI
@@ -36,6 +38,7 @@ const auth = new AuthProvider(`${arcana_client_id}`) // Singleton
 
 
 export const connector = new ArcanaConnector(auth, {
+  chainId: 1,
   login: {
     provider: 'google',
     // email: 'abc@example.com' // email is needed if provider is passwordless

@@ -12,17 +12,15 @@ export class ArcanaConnector extends AbstractConnector {
   readonly name = "Arcana Auth";
   private auth: AuthProvider;
   private login?: LoginType;
-  private chainId: number;
   private attached = false;
 
   constructor(
     auth: AuthProvider,
-    { chainId, login }: { login?: LoginType; chainId: number }
+    config: { login?: LoginType; chainId: number }
   ) {
-    super({ supportedChainIds: [chainId] });
-    this.chainId = chainId;
+    super({ supportedChainIds: [config.chainId] });
     this.auth = auth;
-    this.login = login;
+    this.login = config?.login;
     this.addListeners();
   }
 
@@ -64,11 +62,7 @@ export class ArcanaConnector extends AbstractConnector {
     await this.auth.init();
 
     if (await this.auth.isLoggedIn()) {
-      if (!this.auth.connected) {
-        await new Promise((resolve) =>
-          this.auth.provider.on("connect", resolve)
-        );
-      }
+      await this.waitForConnect();
     } else {
       if (this.login) {
         await this.handleNoUILogin(this.login);
@@ -94,6 +88,12 @@ export class ArcanaConnector extends AbstractConnector {
     }
   }
 
+  private async waitForConnect() {
+    if (!this.auth.connected) {
+      await new Promise((resolve) => this.auth.provider.on("connect", resolve));
+    }
+  }
+
   public async getProvider(): Promise<any> {
     return this.auth.provider;
   }
@@ -106,7 +106,8 @@ export class ArcanaConnector extends AbstractConnector {
   }
 
   public async getChainId(): Promise<number | string> {
-    return this.chainId;
+    await this.waitForConnect();
+    return this.auth.chainId;
   }
 
   public async deactivate(): Promise<void> {
